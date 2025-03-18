@@ -2,6 +2,7 @@ require("dotenv").config();
 const fs = require("fs");
 const path = require("path");
 const ffmpeg = require("fluent-ffmpeg");
+const { apiPostRequestVideoMontageIsComplete } = require("./apiRequests");
 
 // Function to delete all files in PATH_VIDEOS_MONTAGE_CLIPS
 async function cleanupClipsFolder() {
@@ -25,17 +26,23 @@ async function cleanupClipsFolder() {
 }
 
 // Function to process the video montage
-async function createVideoMontage(videoFilePathAndName, timestampArray) {
-  console.log("🔹 Starting video montage creation...");
-  console.log(`🎥 Source Video: ${videoFilePathAndName}`);
-  console.log(`⏳ Received Timestamps: ${timestampArray}`);
 
+async function createVideoMontage(
+  videoFilePathAndName,
+  actionsArray,
+  user,
+  token
+) {
+  console.log("🔹 Starting video montage creation...");
+  // console.log(`🎥 Source Video: ${videoFilePathAndName}`);
+  // console.log(`⏳ Received Timestamps: ${actionsArray}`);
+  console.log(`-----> [2]token: ${token}`);
   if (!fs.existsSync(videoFilePathAndName)) {
     console.error("❌ Source video file not found.");
     process.exit(1);
   }
 
-  if (!Array.isArray(timestampArray) || timestampArray.length === 0) {
+  if (!Array.isArray(actionsArray) || actionsArray.length === 0) {
     console.error("❌ No timestamps provided.");
     process.exit(1);
   }
@@ -56,8 +63,8 @@ async function createVideoMontage(videoFilePathAndName, timestampArray) {
   let clipFilePaths = [];
 
   // 🔹 Step 1: Create clips
-  for (let i = 0; i < timestampArray.length; i++) {
-    const timestamp = timestampArray[i];
+  for (let i = 0; i < actionsArray.length; i++) {
+    const timestamp = actionsArray[i].timestamp;
     const clipStart = Math.max(timestamp - 1.5, 0);
     const clipDuration = 3.0;
     const clipFilePath = path.join(clipsPath, `${i + 1}.mp4`);
@@ -107,6 +114,11 @@ async function createVideoMontage(videoFilePathAndName, timestampArray) {
       )
       .on("end", async () => {
         console.log(`✅ Montage created: ${finalOutputPath}`);
+
+        // 🔥 Send API request to notify completion
+        // const user = { id: 123, name: "John Doe" }; // Replace with actual user data
+        // const password = process.env.PASSWORD_KV_API_VIDEO_MONTAGE_COMPLETE; // Replace with actual password or move it to ENV
+        apiPostRequestVideoMontageIsComplete(finalOutputPath, user, token);
         await cleanupClipsFolder(); // 🔥 Call cleanup function here
         process.exit(0);
       })
@@ -122,32 +134,71 @@ async function createVideoMontage(videoFilePathAndName, timestampArray) {
 // 🔥 **Standalone Execution Mode**
 if (require.main === module) {
   const args = process.argv.slice(2); // Skip first two (node, script path)
-  if (args.length < 2) {
+
+  if (args.length < 4) {
     console.error(
-      "❌ Missing required arguments: videoFilePathAndName, timestampArray"
+      "❌ Missing required arguments: videoFilePathAndName, actionsArray, user, token"
     );
     console.error(
-      'Usage: node videoProcessor.js "/path/to/video.mp4" "[10.5, 30.2, 45.7]"'
+      'Usage: node videoProcessor.js "/path/to/video.mp4" "[10.5, 30.2, 45.7]" "{user data}" "tokenString"'
     );
     process.exit(1);
   }
 
   const videoFilePathAndName = args[0];
-  let timestampArray;
+
+  let actionsArray;
   try {
-    timestampArray = JSON.parse(args[1]); // Parse JSON array
+    actionsArray = JSON.parse(args[1]); // Parse JSON array
   } catch (error) {
-    console.error("❌ Invalid timestampArray format. Expected a JSON array.");
+    console.error("❌ Invalid actionsArray format. Expected a JSON array.");
     process.exit(1);
   }
 
-  createVideoMontage(videoFilePathAndName, timestampArray)
+  let user;
+  try {
+    user = JSON.parse(args[2]); // Parse user JSON object
+  } catch (error) {
+    console.error("❌ Invalid user format. Expected a JSON object.");
+    process.exit(1);
+  }
+
+  const token = args[3]; // Token as a string
+
+  createVideoMontage(videoFilePathAndName, actionsArray, user, token)
     .then(() => process.exit(0))
     .catch(async (error) => {
       console.error("❌ Error:", error);
-      await cleanupClipsFolder(); // Ensure cleanup on any failure
+      await cleanupClipsFolder(); // Ensure cleanup on failure
       process.exit(1);
     });
 }
+
+// if (require.main === module) {
+//   const args = process.argv.slice(2); // Skip first two (node, script path)
+//   if (args.length < 3) {
+//     console.error(
+//       "❌ Missing required arguments: videoFilePathAndName, actionsArray, user"
+//     );
+//     process.exit(1);
+//   }
+
+//   const videoFilePathAndName = args[0];
+//   let actionsArray;
+//   try {
+//     actionsArray = JSON.parse(args[1]); // Parse JSON array
+//   } catch (error) {
+//     console.error("❌ Invalid actionsArray format. Expected a JSON array.");
+//     process.exit(1);
+//   }
+
+//   createVideoMontage(videoFilePathAndName, actionsArray, args[2])
+//     .then(() => process.exit(0))
+//     .catch(async (error) => {
+//       console.error("❌ Error:", error);
+//       await cleanupClipsFolder(); // Ensure cleanup on any failure
+//       process.exit(1);
+//     });
+// }
 
 module.exports = { createVideoMontage };

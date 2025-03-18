@@ -14,7 +14,6 @@
 
 ```sh
 ├── README.md
-├── node_modules
 ├── package.json
 ├── videoProcessor.js
 └── yarn.lock
@@ -28,6 +27,8 @@ Ensure you have a `.env` file with the following paths:
 PATH_VIDEOS_MONTAGE_CLIPS=/path/to/temp_clips
 PATH_VIDEOS_MONTAGE_COMPLETE=/path/to/final_videos
 ```
+
+- NOTE: when running from API the .env from the API is used.
 
 ## 🚀 How to Run
 
