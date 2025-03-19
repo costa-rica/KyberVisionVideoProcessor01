@@ -4,6 +4,7 @@ const path = require("path");
 const ffmpeg = require("fluent-ffmpeg");
 const { apiPostRequestVideoMontageIsComplete } = require("./apiRequests");
 const { writeRequestArgs } = require("./common");
+const { addWatermarkToVideo } = require("./watermark");
 
 // Function to delete all files in PATH_VIDEOS_MONTAGE_CLIPS
 async function cleanupClipsFolder() {
@@ -126,11 +127,30 @@ async function createVideoMontage(
       .on("end", async () => {
         console.log(`✅ Montage created: ${finalOutputPath}`);
 
-        // Send API request to notify completion
-        // apiPostRequestVideoMontageIsComplete(finalOutputPath, user, token);
-        apiPostRequestVideoMontageIsComplete(montageVideoFilename, user, token);
-        await cleanupClipsFolder();
-        process.exit(0);
+        // Add watermark to the final montage
+        try {
+          const watermarkedVideoPath = await addWatermarkToVideo(
+            finalOutputPath
+          );
+          console.log(`✅ Watermarked video ready: ${watermarkedVideoPath}`);
+
+          apiPostRequestVideoMontageIsComplete(
+            path.basename(watermarkedVideoPath),
+            user,
+            token
+          );
+          await cleanupClipsFolder();
+          process.exit(0);
+        } catch (error) {
+          console.error("❌ Error adding watermark:", error);
+          await cleanupClipsFolder();
+          process.exit(1);
+        }
+        // // Send API request to notify completion
+        // // apiPostRequestVideoMontageIsComplete(finalOutputPath, user, token);
+        // apiPostRequestVideoMontageIsComplete(montageVideoFilename, user, token);
+        // await cleanupClipsFolder();
+        // process.exit(0);
       })
       .on("error", async (err) => {
         console.error("❌ Error merging clips:", err);
