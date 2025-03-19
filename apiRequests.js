@@ -3,7 +3,7 @@ const axios = require("axios");
 const { writeRequestArgs } = require("./common");
 
 async function apiPostRequestVideoMontageIsComplete(filename, user, token) {
-  const url = `${process.env.URL_KV_API}/videos/montage-service/video-completed-notify-user`;
+  const url = `${process.env.URL_LOCAL_KV_API_FOR_VIDEO_PROCESSOR}/videos/montage-service/video-completed-notify-user`;
   console.log(`-----> [3] token: ${token}`);
   const requestData = {
     filename,
@@ -22,15 +22,6 @@ async function apiPostRequestVideoMontageIsComplete(filename, user, token) {
       },
       timeout: 5000, // 5 seconds timeout
     });
-
-    // const response = await axios.post(url, requestData, {
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //     Authorization: `Bearer ${token}`,
-    //   },
-    //   timeout: 5000, // 5 seconds timeout
-    // });
-
     console.log(`✅ API Response:`, response.data);
     return response.data;
   } catch (error) {
