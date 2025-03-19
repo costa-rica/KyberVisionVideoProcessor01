@@ -3,6 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const ffmpeg = require("fluent-ffmpeg");
 const { apiPostRequestVideoMontageIsComplete } = require("./apiRequests");
+const { writeRequestArgs } = require("./common");
 
 // Function to delete all files in PATH_VIDEOS_MONTAGE_CLIPS
 async function cleanupClipsFolder() {
@@ -37,6 +38,15 @@ async function createVideoMontage(
   // console.log(`🎥 Source Video: ${videoFilePathAndName}`);
   // console.log(`⏳ Received Timestamps: ${actionsArray}`);
   console.log(`-----> [2]token: ${token}`);
+  writeRequestArgs(
+    {
+      videoFilePathAndName,
+      actionsArray,
+      user,
+      token,
+    },
+    "-02-createVideoMontage"
+  );
   if (!fs.existsSync(videoFilePathAndName)) {
     console.error("❌ Source video file not found.");
     process.exit(1);
