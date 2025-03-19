@@ -4,7 +4,10 @@ const { writeRequestArgs } = require("./common");
 
 async function apiPostRequestVideoMontageIsComplete(filename, user, token) {
   const url = `${process.env.URL_LOCAL_KV_API_FOR_VIDEO_PROCESSOR}/videos/montage-service/video-completed-notify-user`;
-  console.log(`-----> [3] token: ${token}`);
+  // console.log(`-----> [3] token: ${token}`);
+  console.log(
+    `- Create video montage step #3: in KV VideoProcessor01 apiPostRequestVideoMontageIsComplete -`
+  );
   const requestData = {
     filename,
     user,

@@ -29,24 +29,27 @@ async function cleanupClipsFolder() {
 // Function to process the video montage
 
 async function createVideoMontage(
-  videoFilePathAndName,
+  // videoFilePathAndName,
+  filename,
   actionsArray,
   user,
   token
 ) {
-  console.log("🔹 Starting video montage creation...");
-  // console.log(`🎥 Source Video: ${videoFilePathAndName}`);
-  // console.log(`⏳ Received Timestamps: ${actionsArray}`);
-  console.log(`-----> [2]token: ${token}`);
+  console.log(
+    `- Create video montage step #2: in KV VideoProcessor01 createVideoMontage -`
+  );
+
   writeRequestArgs(
     {
-      videoFilePathAndName,
+      // videoFilePathAndName,
+      filename,
       actionsArray,
       user,
       token,
     },
     "-02-createVideoMontage"
   );
+  const videoFilePathAndName = path.join(process.env.PATH_VIDEOS, filename);
   if (!fs.existsSync(videoFilePathAndName)) {
     console.error("❌ Source video file not found.");
     process.exit(1);
@@ -79,20 +82,20 @@ async function createVideoMontage(
     const clipDuration = 3.0;
     const clipFilePath = path.join(clipsPath, `${i + 1}.mp4`);
 
-    console.log(
-      `🎬 Creating clip ${
-        i + 1
-      }: Start ${clipStart}s, Duration ${clipDuration}s -> ${clipFilePath}`
-    );
+    // console.log(
+    //   `🎬 Creating clip ${
+    //     i + 1
+    //   }: Start ${clipStart}s, Duration ${clipDuration}s -> ${clipFilePath}`
+    // );
 
     await new Promise((resolve, reject) => {
       ffmpeg(videoFilePathAndName)
         .setStartTime(clipStart)
         .setDuration(clipDuration)
         .output(clipFilePath)
-        .on("start", (cmd) => console.log(`🚀 FFmpeg Command: ${cmd}`))
+        // .on("start", (cmd) => console.log(`🚀 FFmpeg Command: ${cmd}`))
         .on("end", () => {
-          console.log(`✅ Clip ${i + 1} created: ${clipFilePath}`);
+          // console.log(`✅ Clip ${i + 1} created: ${clipFilePath}`);
           clipFilePaths.push(clipFilePath);
           resolve();
         })
@@ -110,26 +113,21 @@ async function createVideoMontage(
     clipFilePaths.map((file) => `file '${file}'`).join("\n")
   );
 
-  console.log("📃 File list for merging:");
-  console.log(fs.readFileSync(fileListPath, "utf8"));
-
   await new Promise((resolve, reject) => {
     ffmpeg()
       .input(fileListPath)
       .inputOptions(["-f concat", "-safe 0"])
       .outputOptions(["-c copy"])
       .output(finalOutputPath)
-      .on("start", (cmd) =>
-        console.log(`🚀 Merging clips with FFmpeg Command: ${cmd}`)
-      )
+      // .on("start", (cmd) =>
+      //   console.log(`🚀 Merging clips with FFmpeg Command: ${cmd}`)
+      // )
       .on("end", async () => {
         console.log(`✅ Montage created: ${finalOutputPath}`);
 
-        // 🔥 Send API request to notify completion
-        // const user = { id: 123, name: "John Doe" }; // Replace with actual user data
-        // const password = process.env.PASSWORD_KV_API_VIDEO_MONTAGE_COMPLETE; // Replace with actual password or move it to ENV
+        // Send API request to notify completion
         apiPostRequestVideoMontageIsComplete(finalOutputPath, user, token);
-        await cleanupClipsFolder(); // 🔥 Call cleanup function here
+        await cleanupClipsFolder();
         process.exit(0);
       })
       .on("error", async (err) => {
@@ -183,32 +181,5 @@ if (require.main === module) {
       process.exit(1);
     });
 }
-
-// if (require.main === module) {
-//   const args = process.argv.slice(2); // Skip first two (node, script path)
-//   if (args.length < 3) {
-//     console.error(
-//       "❌ Missing required arguments: videoFilePathAndName, actionsArray, user"
-//     );
-//     process.exit(1);
-//   }
-
-//   const videoFilePathAndName = args[0];
-//   let actionsArray;
-//   try {
-//     actionsArray = JSON.parse(args[1]); // Parse JSON array
-//   } catch (error) {
-//     console.error("❌ Invalid actionsArray format. Expected a JSON array.");
-//     process.exit(1);
-//   }
-
-//   createVideoMontage(videoFilePathAndName, actionsArray, args[2])
-//     .then(() => process.exit(0))
-//     .catch(async (error) => {
-//       console.error("❌ Error:", error);
-//       await cleanupClipsFolder(); // Ensure cleanup on any failure
-//       process.exit(1);
-//     });
-// }
 
 module.exports = { createVideoMontage };
