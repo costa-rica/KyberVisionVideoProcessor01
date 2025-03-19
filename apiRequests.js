@@ -2,17 +2,21 @@ require("dotenv").config();
 const axios = require("axios");
 const { writeRequestArgs } = require("./common");
 
-async function apiPostRequestVideoMontageIsComplete(filename, user, token) {
+async function apiPostRequestVideoMontageIsComplete(
+  montageVideoFilename,
+  user,
+  token
+) {
   const url = `${process.env.URL_LOCAL_KV_API_FOR_VIDEO_PROCESSOR}/videos/montage-service/video-completed-notify-user`;
   // console.log(`-----> [3] token: ${token}`);
   console.log(
     `- Create video montage step #3: in KV VideoProcessor01 apiPostRequestVideoMontageIsComplete -`
   );
   const requestData = {
-    filename,
+    filename: montageVideoFilename,
     user,
   };
-  writeRequestArgs(requestData, "-03-apiPostRequestVideoMontageIsComplete");
+  // writeRequestArgs(requestData, "-03-apiPostRequestVideoMontageIsComplete");
 
   try {
     console.log(`📡 Sending API request to: ${url}`);

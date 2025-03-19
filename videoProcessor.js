@@ -39,16 +39,16 @@ async function createVideoMontage(
     `- Create video montage step #2: in KV VideoProcessor01 createVideoMontage -`
   );
 
-  writeRequestArgs(
-    {
-      // videoFilePathAndName,
-      filename,
-      actionsArray,
-      user,
-      token,
-    },
-    "-02-createVideoMontage"
-  );
+  // writeRequestArgs(
+  //   {
+  //     // videoFilePathAndName,
+  //     filename,
+  //     actionsArray,
+  //     user,
+  //     token,
+  //   },
+  //   "-02-createVideoMontage"
+  // );
   const videoFilePathAndName = path.join(process.env.PATH_VIDEOS, filename);
   if (!fs.existsSync(videoFilePathAndName)) {
     console.error("❌ Source video file not found.");
@@ -105,7 +105,8 @@ async function createVideoMontage(
   }
 
   // 🔹 Step 2: Merge clips into one video
-  const finalOutputPath = path.join(outputPath, `montage_${Date.now()}.mp4`);
+  const montageVideoFilename = `montage_${Date.now()}.mp4`;
+  const finalOutputPath = path.join(outputPath, montageVideoFilename);
   const fileListPath = path.join(clipsPath, "file_list.txt");
 
   fs.writeFileSync(
@@ -126,7 +127,8 @@ async function createVideoMontage(
         console.log(`✅ Montage created: ${finalOutputPath}`);
 
         // Send API request to notify completion
-        apiPostRequestVideoMontageIsComplete(finalOutputPath, user, token);
+        // apiPostRequestVideoMontageIsComplete(finalOutputPath, user, token);
+        apiPostRequestVideoMontageIsComplete(montageVideoFilename, user, token);
         await cleanupClipsFolder();
         process.exit(0);
       })
